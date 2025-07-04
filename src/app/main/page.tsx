@@ -1,21 +1,46 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { IResume } from "@/model/ResumeModel";
+import Editor from "./components/Editor";
+import LivePreview from "./components/LivePreview";
 
 export default function Page() {
+  const [resumeContent, setResumeContent] = useState<IResume>();
   useEffect(() => {
-    fetch("/api/templates/signin").then((res) => {
-      if (res.ok) {
-        console.log("Sign-in template fetched successfully.");
+    let ran = false;
+    if (ran) return;
 
-        res.text().then((template) => {
-          // Assuming you want to do something with the template
-          console.log("Sign-in template:", template);
-        });
-      } else {
-        console.error("Failed to fetch sign-in template.");
+    async function fetchInitialResume() {
+      const res = await fetch("/api/resume/form-progress");
+      if (!res.ok) {
+        // TODO: Handle error
       }
-    });
+      const data = await res.json();
+      setResumeContent(data);
+    }
+
+    try {
+      // fetchInitialResume();
+    } catch (error) {
+      console.error("Error fetching initial resume:", error);
+    }
+
+    return () => {
+      ran = true;
+    };
   }, []);
-  return <div>Hi babe</div>;
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Editor
+        resumeContent={resumeContent}
+        setResumeContent={setResumeContent}
+      />
+      <LivePreview
+        resumeContent={resumeContent}
+        setResumeContent={setResumeContent}
+      />
+    </div>
+  );
 }
