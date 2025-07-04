@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
 
 function createSupabaseBrowserClient() {
@@ -11,7 +11,20 @@ function createSupabaseBrowserClient() {
     );
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll: () =>
+        document.cookie.split("; ").map((cookie) => {
+          const [name, value] = cookie.split("=");
+          return { name, value };
+        }),
+      setAll: (cookies: { name: string; value: string }[]) => {
+        cookies.forEach(({ name, value }) => {
+          document.cookie = `${name}=${value}; path=/;`;
+        });
+      },
+    },
+  });
 }
 
 function createSupabaseServerClient(cookies: {

@@ -15,8 +15,10 @@ export default function Page() {
       const { data, error } = await supabaseRef.current.auth.getUser();
       if (data.user) {
         alert("User is authenticated");
+        window.location.href = "/main";
       } else {
         alert("User is not authenticated");
+        // redirect to main
       }
     }
     checkSession();
@@ -29,7 +31,6 @@ export default function Page() {
   const signInWithEmail = useCallback(
     async function signInWithEmail(_email: string) {
       const redirectUrl = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL;
-      console.log("Redirect URL:", redirectUrl);
       const { data, error } = await supabaseRef.current.auth.signInWithOtp({
         email,
         options: {

@@ -3,8 +3,8 @@ import { withAuth } from "@/utils/AuthMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 // import { templatesDB } from "@/lib/database"; // Your data source
 
-export const GET = withAuth(async (request) => {
-  const id = request.nextUrl.searchParams.get("id");
+export const GET = withAuth(async (request, { params }) => {
+  const id = params.id;
   // const template = templatesDB.getById(id);
 
   // if (!template) {
