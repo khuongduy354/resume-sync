@@ -102,9 +102,12 @@ export const getResumeTemplate = () => `
 
 export default function LivePreview({ resumeContent }: LivePreviewProps) {
   // Use the live data from Editor, fallback to default data if none provided
+  const currentDate = new Date();
   const defaultResumeContent: IResume = {
     owner_id: "mock-user-id",
-    template_id: "modern-template",
+    template_url: "modern-template",
+    created_at: currentDate.toISOString(),
+    last_updated_at: currentDate.toISOString(),
     content: {
       sections: {
         info: [
