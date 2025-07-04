@@ -1,10 +1,24 @@
 // utils/authMiddleware.ts
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseClient";
+import { SupabaseClient } from "@supabase/supabase-js";
+
+// extends the NextRequest to include user_id and supabase client
+export type withAuthRequest = NextRequest & {
+  user_id: string;
+  supabase: SupabaseClient;
+};
+function createWithAuthRequest(
+  request: NextRequest,
+  user_id: string,
+  supabase: SupabaseClient
+): withAuthRequest {
+  return Object.assign(request, { user_id, supabase });
+}
 
 // A wrapper function that check user authentication
 export function withAuth(
-  handler: (request: NextRequest, opt?: any) => Promise<NextResponse>
+  handler: (request: withAuthRequest, opt?: any) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, _opt?: any) => {
     try {
@@ -41,8 +55,11 @@ export function withAuth(
         return NextResponse.redirect(url);
       }
 
+      // add extra properties to the request object
+      const newRequest = createWithAuthRequest(request, user.id, supabase);
+
       // Merge cookies from Supabase with handler's response
-      const handlerResponse = await handler(request, _opt);
+      const handlerResponse = await handler(newRequest, _opt);
 
       supabaseResponse.cookies.getAll().forEach((cookie) => {
         handlerResponse.cookies.set(cookie);
