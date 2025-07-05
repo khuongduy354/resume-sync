@@ -2,7 +2,7 @@ import { TemplateModel } from "@/model/TemplateMode";
 import { NextRequest, NextResponse } from "next/server";
 import { ConfigurationError, handleControllerError } from "@/lib/error";
 
-export const GET = async (req: NextRequest, res: NextResponse) => {
+export const GET = async (req: NextRequest) => {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
       throw new ConfigurationError("NEXT_PUBLIC_SUPABASE_URL");
