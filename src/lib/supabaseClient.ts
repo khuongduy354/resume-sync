@@ -12,7 +12,7 @@ function createSupabaseBrowserClient(trackCookies = true) {
   }
 
   let options: any = {};
-  if (trackCookies) {
+  if (trackCookies && typeof document !== "undefined") {
     options.cookies = {
       getAll: () =>
         document.cookie.split("; ").map((cookie) => {
