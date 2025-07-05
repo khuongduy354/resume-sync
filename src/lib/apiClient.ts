@@ -61,3 +61,24 @@ export const resumeAPI = {
     }
   },
 };
+
+// Templates API functions
+export const templatesAPI = {
+  // Get all templates
+  getTemplates: async (): Promise<Array<{ name: string; url: string }>> => {
+    const res = await fetch(`${API_BASE_URL}/templates/`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch templates: ${res.status}`);
+    }
+    return await res.json();
+  },
+
+  // Get template content from URL
+  getTemplateContent: async (url: string): Promise<string> => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch template content: ${res.status}`);
+    }
+    return await res.text();
+  },
+};

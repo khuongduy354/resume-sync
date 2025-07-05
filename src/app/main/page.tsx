@@ -91,7 +91,6 @@ export default function Page() {
       try {
         const data = await resumeAPI.getOrCreateResume();
         setResumeContent(data);
-        console.log("Initial resume fetched or created:", data);
       } catch (error) {
         console.error("Error fetching or creating initial resume:", error);
       }
