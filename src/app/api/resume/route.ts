@@ -3,6 +3,12 @@ import { ResumeModel } from "@/model/ResumeModel";
 import { withAuth, withAuthRequest } from "@/utils/AuthMiddleware";
 import { NextResponse } from "next/server";
 import z from "zod";
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+  handleControllerError,
+} from "@/lib/error";
 
 // CREATE a new resume progress
 const POSTController = async (req: withAuthRequest) => {
@@ -13,10 +19,7 @@ const POSTController = async (req: withAuthRequest) => {
 
     // at this point, only one resume per user is allowed
     if (getRes) {
-      return NextResponse.json(
-        { error: "Resume already exists" },
-        { status: 400 }
-      );
+      throw new ConflictError("Resume");
     }
 
     // create
@@ -26,11 +29,11 @@ const POSTController = async (req: withAuthRequest) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating resume progress:", error);
-    return NextResponse.json(
-      { error: "Failed to create resume progress" },
-      { status: 500 }
+    const { message, status } = handleControllerError(
+      error,
+      "POST /api/resume"
     );
+    return NextResponse.json({ error: message }, { status });
   }
 };
 export const POST = withAuth(POSTController);
@@ -44,7 +47,7 @@ const GETController = async (req: withAuthRequest) => {
 
     // responses
     if (!res) {
-      return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+      throw new NotFoundError("Resume");
     }
 
     return NextResponse.json(
@@ -52,11 +55,8 @@ const GETController = async (req: withAuthRequest) => {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching resume progress:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch resume progress" },
-      { status: 500 }
-    );
+    const { message, status } = handleControllerError(error, "GET /api/resume");
+    return NextResponse.json({ error: message }, { status });
   }
 };
 
@@ -72,7 +72,13 @@ const PATCHController = async (req: withAuthRequest) => {
       content: ContentSchema,
       user_updated_at: ResumeSchema.shape.user_updated_at,
     });
-    const parsedBody = bodySchema.parse(body);
+
+    let parsedBody;
+    try {
+      parsedBody = bodySchema.parse(body);
+    } catch (zodError) {
+      throw new ValidationError("Invalid request body", zodError);
+    }
 
     // update
     const Resume = new ResumeModel(req.supabase);
@@ -81,20 +87,16 @@ const PATCHController = async (req: withAuthRequest) => {
       user_updated_at: parsedBody.user_updated_at,
     });
 
-    // responses
-    if (!resume) {
-      return NextResponse.json({ error: "Resume not found" }, { status: 404 });
-    }
     return NextResponse.json(
       { data: ResumeSchema.parse(resume) },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating resume progress:", error);
-    return NextResponse.json(
-      { error: "Failed to update resume progress" },
-      { status: 500 }
+    const { message, status } = handleControllerError(
+      error,
+      "PATCH /api/resume"
     );
+    return NextResponse.json({ error: message }, { status });
   }
 };
 

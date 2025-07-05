@@ -1,29 +1,33 @@
 import { TemplateModel } from "@/model/TemplateMode";
 import { NextRequest, NextResponse } from "next/server";
+import { ConfigurationError, handleControllerError } from "@/lib/error";
 
 export const GET = async (req: NextRequest, res: NextResponse) => {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return NextResponse.json(
-      { error: "Supabase URL is not defined" },
-      { status: 500 }
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      throw new ConfigurationError("NEXT_PUBLIC_SUPABASE_URL");
+    }
+
+    // fetch all templates name
+    const templatesName = await TemplateModel.getAllTemplatesNames();
+
+    // add extra url to it, filter only html
+    const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/resume//`;
+    const templatesRes = templatesName
+      .filter((template) => template.name.endsWith(".html"))
+      .map((template) => {
+        return {
+          name: template.name,
+          url: `${base}${template.name}`,
+        };
+      });
+
+    return NextResponse.json(templatesRes, { status: 200 });
+  } catch (error) {
+    const { message, status } = handleControllerError(
+      error,
+      "GET /api/templates"
     );
+    return NextResponse.json({ error: message }, { status });
   }
-
-  // fetch all templates name
-  const templatesName = await TemplateModel.getAllTemplatesNames();
-
-  if (!templatesName || templatesName.length === 0) {
-    return NextResponse.json({ error: "No templates found" }, { status: 500 });
-  }
-
-  // add extra url to it
-  const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/resume//`;
-  const templatesRes = templatesName.map((template) => {
-    return {
-      name: template.name,
-      url: `${base}${template.name}`,
-    };
-  });
-
-  return NextResponse.json(templatesRes, { status: 200 });
 };

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabaseClient";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { UnauthorizedError, handleControllerError } from "@/lib/error";
 
 // extends the NextRequest to include user_id and supabase client
 export type withAuthRequest = NextRequest & {
@@ -67,11 +68,11 @@ export function withAuth(
 
       return handlerResponse;
     } catch (error) {
-      console.error("Error in withAuth middleware:", error);
-      return NextResponse.json(
-        { error: "Internal Server Error" },
-        { status: 500 }
+      const { message, status } = handleControllerError(
+        error,
+        "withAuth middleware"
       );
+      return NextResponse.json({ error: message }, { status });
     }
   };
 }

@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { IContent, IResume } from "@/lib/schemas/resume.schema";
+import { DatabaseError, NotFoundError } from "@/lib/error";
 
 type UpdateableFields = {
   content: IContent;
@@ -22,7 +23,10 @@ export class ResumeModel {
       .maybeSingle();
 
     if (error) {
-      throw new Error(`Error fetching resume: ${error.message}`);
+      throw new DatabaseError(
+        `fetching resume for user ${query.userId}`,
+        error
+      );
     }
 
     return data;
@@ -36,7 +40,7 @@ export class ResumeModel {
       .single();
 
     if (error) {
-      throw new Error(`Error creating resume: ${error.message}`);
+      throw new DatabaseError(`creating resume for user ${owner_id}`, error);
     }
 
     return data;
@@ -51,7 +55,11 @@ export class ResumeModel {
       })
       .single();
     if (error) {
-      throw new Error(`Error updating resume: ${error.message}`);
+      throw new DatabaseError(`updating resume ${resume_id}`, error);
+    }
+
+    if (!data) {
+      throw new NotFoundError(`Resume with ID ${resume_id}`);
     }
 
     return data;
