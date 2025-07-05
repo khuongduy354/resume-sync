@@ -22,10 +22,10 @@ export const ContentSchema = z.object({
         .array(
           z.object({
             name: z.string(),
-            email: z.string().email().optional(),
+            email: z.string().optional(),
             phone: z.string().optional(),
             address: z.string().optional(),
-            website: z.string().url().optional(),
+            website: z.string().optional(),
             summary: z.string().optional(),
           })
         )
