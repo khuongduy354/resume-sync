@@ -62,6 +62,7 @@ export default function Page() {
       setIsSigningIn(true);
       try {
         const redirectUrl = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL;
+        console.log(redirectUrl);
         const { data, error } = await supabaseRef.current.auth.signInWithOtp({
           email,
           options: {
