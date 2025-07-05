@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { resumeAPI } from "@/lib/apiClient";
-import { IResume } from "@/lib/schemas/resume.schema";
+import { IResume, ResumeSchema } from "@/lib/schemas/resume.schema";
 
 export function useAuth() {
   const [userEmail, setUserEmail] = useState<string>("");
@@ -24,10 +24,15 @@ export function useAuth() {
         setUserEmail(authData.user.email || "");
 
         const data = await resumeAPI.getOrCreateResume();
-        setResumeContent(data);
+
+        const parsedRes = await ResumeSchema.safeParseAsync(data);
+        if (parsedRes.success) {
+          setResumeContent(parsedRes.data);
+        } else {
+          console.error("Failed to parse resume data:", parsedRes.error);
+        }
       } catch (error) {
         console.error("Error fetching or creating initial resume:", error);
-        window.location.href = "/login";
       }
     }
 

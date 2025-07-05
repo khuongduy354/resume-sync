@@ -23,7 +23,7 @@ export const resumeAPI = {
     if (!res.ok) {
       throw new Error(`Failed to create resume: ${res.status}`);
     }
-    return res.json();
+    return (await res.json()).data;
   },
 
   // Sync resume content (with keepalive for emergency sync)
@@ -56,8 +56,9 @@ export const resumeAPI = {
       // If resume doesn't exist (404), create a new one
       if (error instanceof Error && error.message.includes("404")) {
         return await resumeAPI.createResume();
+      } else {
+        throw error;
       }
-      throw error;
     }
   },
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import DOMPurify from "dompurify";
-import { IResume } from "@/lib/schemas/resume.schema";
+import { IResume, ResumeSchema } from "@/lib/schemas/resume.schema";
 import { templatesAPI } from "@/lib/apiClient";
 import jspdf from "jspdf";
 import html2canvas from "html2canvas-pro";
@@ -50,6 +50,14 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
 
   // Generate HTML using Handlebars template
   const generateResumeHTML = (displayData: IResume) => {
+    try {
+      // Validate the resume content
+      const validatedData = ResumeSchema.parse(displayData);
+      displayData = validatedData;
+    } catch (error) {
+      return;
+    }
+
     const info = displayData.content.sections.info[0] || {};
     const education = displayData.content.sections.education;
     const skills = displayData.content.sections.skills;
