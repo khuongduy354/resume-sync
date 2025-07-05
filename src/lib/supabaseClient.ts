@@ -1,7 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
 
-function createSupabaseBrowserClient() {
+function createSupabaseBrowserClient(trackCookies = true) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 
@@ -11,8 +11,9 @@ function createSupabaseBrowserClient() {
     );
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
+  let options: any = {};
+  if (trackCookies) {
+    options.cookies = {
       getAll: () =>
         document.cookie.split("; ").map((cookie) => {
           const [name, value] = cookie.split("=");
@@ -23,8 +24,10 @@ function createSupabaseBrowserClient() {
           document.cookie = `${name}=${value}; path=/;`;
         });
       },
-    },
-  });
+    };
+  }
+
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, options);
 }
 
 function createSupabaseServerClient(cookies: {

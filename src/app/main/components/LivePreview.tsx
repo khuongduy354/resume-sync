@@ -1,6 +1,6 @@
 "use client";
 
-import { IResume } from "@/model/ResumeModel";
+import { IResume } from "@/lib/schemas/resume.schema";
 import Handlebars from "handlebars";
 
 interface LivePreviewProps {
@@ -104,6 +104,8 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
   // Use the live data from Editor, fallback to default data if none provided
   const currentDate = new Date();
   const defaultResumeContent: IResume = {
+    id: "mock-resume-id",
+    user_updated_at: 0,
     owner_id: "mock-user-id",
     template_url: "modern-template",
     created_at: currentDate.toISOString(),
@@ -171,11 +173,9 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
     },
   };
 
-  const displayData = resumeContent || defaultResumeContent;
-
   // Generate HTML using Handlebars template
-  const generateResumeHTML = () => {
-    const info = displayData.content.sections.info[0];
+  const generateResumeHTML = (displayData: IResume) => {
+    const info = displayData.content.sections.info[0] || {};
     const education = displayData.content.sections.education;
     const skills = displayData.content.sections.skills;
     const experience = displayData.content.sections.experience;
@@ -210,7 +210,7 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
 
       {/* Resume Preview */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        {generateResumeHTML()}
+        {generateResumeHTML(resumeContent || defaultResumeContent)}
       </div>
     </div>
   );

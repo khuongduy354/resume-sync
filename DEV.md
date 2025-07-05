@@ -1,67 +1,57 @@
 # backlogs 
+rls setup
+refresh token in middleware 
+every controller create new model because the supabase instance (which contains auth info) is new -> cannot be singleton
+service layer ?
+sanitize in controller using zod + middleware 
 auth: sign out when the other sign in  
+
+handlebars does mitigate xss, but use DOMpurify for safer approach
+reference debounce only here: https://resume.io/app/resumes/39625001/edit
 
 caching redis:  LRU user-id:formdata
 error handling 
 logging 
-how to make sync faster: worker fe 
+templates in supabase storage to leverage CDN  
 
-# Now  
-auth 
+last_updated_at: is a field tracked by client
+
+
 -> supabase client (for client-side) can login then save to cookie 
 that cookies is tracked by next.js and can be passed in Server API to authenticate 
 
-[] backend interfaces 
+# Now  
 
-PATCH /resume/form-progress  
-GET /resume/form-progress
-POST /resume/generate
-{ 
-  templateId: 
-}
+[x] get all templates endpoint
+[x] rpc
+[x] PATCH /resume/form-progress   
+-> check timestamp, only apply if newer 
+[x] sync to server 
 
-
-templates{ 
-  id:
-  handlebar html
-} 
-
-user 1-n form_content: 
-
-form_content {  
-  owner_id:
-  form_data: {   // json 
-    steps: {
-      1: 
-      2: 
-      3: 
-    }
-  }
-}
-
-
-
+[] refractor 
+[] use it and write questions 
+[] deploy
 
 
 ### Login  
-[] be login setup 
-[] fe login
+[x] be login setup 
+[x] fe login
 
-[] login flow:  
+[x] login flow:  
 
-[] Authorization 
+[x] Authorization 
 
 
 ### Main  
-[] Form rendering step by step 
-[] cv generation  
-[] offline supports 
-[] sync to server 
+[x] Form rendering step by step 
+[x] cv generation  
+<!-- [] offline supports  -->
 
 
 ### Cleanup 
-[] refractor 
-[] use it and write questions 
+[] error handling  
+[] testing, maybe manual scripts
+[] write up centralize decisions
 
 
 # Goal 
@@ -78,6 +68,7 @@ Homepage
 Submission: 
 - Link github 
 - Link product
+
 
 
 # Flow
@@ -99,16 +90,37 @@ form_data: {
 }
 
 
-# How to track progress   
+# How to track progress  - Sync  
 
-- For each step, click next -> apply save for current user   
-- Save current step progress: 
+Client use debounce sync (after X secs of not typing) -> add sync request into a controllable wait queue (Q) ->  make a sync request after timedout
+Server take sync request, extract the new data, sanitize only updateable parts -> apply only when the timestamp is newer (use rpc for atomic operation)   
+When client shutdown, read the Q above, and fire the request instantly using keep-alive fetch
+<!-- When client shutdown (window.unload), read the (Q) above, and fire the request instantly using beacon -> screw it because no header = no auth --> 
+https://stackoverflow.com/questions/40523469/navigator-sendbeacon-to-pass-header-information
 
-  - Should be realtime, consistent
+Why timestamp? This is a client-tracked timestamp, which is created when the sync request is queued, let's say in term of retry sync (3) in case of failure, during that time user make a new sync request (after typing), then race condition occurs. 
+Moreover, this optimistic update mitigate client bug (unordered sync requests)
 
-# Extra
+*Issue*
+t = 0                                               t=2                              t = 3 
+debounce sync failed, retry in 3 secs (1) ---  new debounce sync made (2)      --   retry the (1) request  
+-> the (2) is newer at t=2, but the retry in t=3 will override without timestamp
+
+
+*Solution* 
+t = 0                                               t=2                              t = 3 
+debounce sync failed, retry in 3 secs (1) ---  new debounce sync made (2) with t=2      --   retry the (1) request with t=1
+-> the (2) is newer at t=2, the retry occur after the new sync, but the timestamp is older -> server can handle conflicts
+
+
+
+
+### Extra sync features
 - Retry failed saves mechanism 
-- React queues for sync (use along debounce below) 
+
+- Why no local storage involved, first is info security issue, second is data conflict, even if the user managed to save the unsynced data into local storage. 
+There's a chance he can log into a new device, and the unsynced local is lost
+-> Well, this is still mangeable, but with a conflict resolution
 
 # Decisions 
 
