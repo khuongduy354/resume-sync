@@ -29,7 +29,6 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
           const templateContent = await templatesAPI.getTemplateContent(
             templates[0].url
           );
-          console.log(templates[0].url);
           setCurrentTemplate(templateContent);
         }
       } catch (error) {
