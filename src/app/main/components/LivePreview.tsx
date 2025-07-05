@@ -1,8 +1,8 @@
 "use client";
 
+import DOMPurify from "dompurify";
 import { IResume } from "@/lib/schemas/resume.schema";
 import { templatesAPI } from "@/lib/apiClient";
-import { defaultResumeTemplate } from "@/lib/templates/defaultTemplate";
 import Handlebars from "handlebars";
 import { useEffect, useState } from "react";
 
@@ -55,8 +55,10 @@ export default function LivePreview({ resumeContent }: LivePreviewProps) {
       experience,
     });
 
-    //
-    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+    // DOM purify
+    const sanitizedHtml = DOMPurify.sanitize(htmlContent);
+
+    return <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
   };
 
   return (
