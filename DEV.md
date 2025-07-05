@@ -1,93 +1,46 @@
 # backlogs 
-rls setup
-refresh token in middleware 
-every controller create new model because the supabase instance (which contains auth info) is new -> cannot be singleton
-service layer ?
-sanitize in controller using zod + middleware 
-auth: sign out when the other sign in  
+<!-- rls setup -->
+<!-- refresh token in middleware  -->
+<!-- ->https://supabase.com/docs/guides/auth/sessions#using-http-only-cookies-to-store-access-and-refresh-tokens -->
+<!-- every controller create new model because the supabase instance (which contains auth info) is new -> cannot be singleton -->
 
-handlebars does mitigate xss, but use DOMpurify for safer approach
-reference debounce only here: https://resume.io/app/resumes/39625001/edit
+<!-- sanitize in controller using zod + middleware  -->
+<!-- auth: sign out when the other sign in   -->
+
+<!-- handlebars does mitigate xss, but use DOMpurify for safer approach -->
+<!-- reference debounce only here: https://resume.io/app/resumes/39625001/edit -->
 
 caching redis:  LRU user-id:formdata
-error handling 
-logging 
-templates in supabase storage to leverage CDN  
+<!-- error handling  -->
+<!-- templates in supabase storage to leverage CDN   -->
 
-last_updated_at: is a field tracked by client
+<!-- user_uppdated_at: is a field tracked by client -->
 
 
--> supabase client (for client-side) can login then save to cookie 
-that cookies is tracked by next.js and can be passed in Server API to authenticate 
+<!-- -> supabase client (for client-side) can login then save to cookie  -->
+<!-- that cookies is tracked by next.js and can be passed in Server API to authenticate  -->
 
 # Now  
 
-[x] get all templates endpoint
-[x] rpc
-[x] PATCH /resume/form-progress   
--> check timestamp, only apply if newer 
-[x] sync to server 
 
-[] refractor 
 [] use it and write questions 
 [] deploy
 
 
 ### Login  
-[x] be login setup 
-[x] fe login
-
-[x] login flow:  
-
-[x] Authorization 
-
+[x] login logout with magic link
 
 ### Main  
 [x] Form rendering step by step 
-[x] cv generation  
-<!-- [] offline supports  -->
-
-
-### Cleanup 
-[] error handling  
-[] testing, maybe manual scripts
-[] write up centralize decisions
-
-
-# Goal 
-nextjs Supabase
-Homepage  
-  Login -> Form to enter email -> Supabase magic link to authentication 
-  Logined -> Multi-step Form > next > Hiistory > education > skill >  
-  -> finally create a cv.  
-
-  Persist step 
-
-  Preview
-
-Submission: 
-- Link github 
-- Link product
+[x] download pdf 
+[x] sync
 
 
 
-# Flow
 
-Client -> Server -> Supabase -> Get steps from supabase 
 
-Supabase 
-id -> 
 
-data {  
-id: user-od 
-email: user email
-form_data: {   
-  steps: 
-    "dsf": json | null, 
-    "asdsad": json | null,
-    "dssad":json | null
-}
-}
+
 
 
 # How to track progress  - Sync  
@@ -98,7 +51,7 @@ When client shutdown, read the Q above, and fire the request instantly using kee
 <!-- When client shutdown (window.unload), read the (Q) above, and fire the request instantly using beacon -> screw it because no header = no auth --> 
 https://stackoverflow.com/questions/40523469/navigator-sendbeacon-to-pass-header-information
 
-Why timestamp? This is a client-tracked timestamp, which is created when the sync request is queued, let's say in term of retry sync (3) in case of failure, during that time user make a new sync request (after typing), then race condition occurs. 
+Why timestamp? This is a client-tracked timestamp, which is created when the sync request is queued, let's say retry sync is implemented in cases of failure in case of failure, during that time user make a new sync request (after typing), then race condition occurs. 
 Moreover, this optimistic update mitigate client bug (unordered sync requests)
 
 *Issue*
@@ -115,14 +68,13 @@ debounce sync failed, retry in 3 secs (1) ---  new debounce sync made (2) with t
 
 
 
-### Extra sync features
-- Retry failed saves mechanism 
-
+### Extra sync features (Future)
+- Retry failed saves mechanism, this is doable due to timestamp configured above 
 - Why no local storage involved, first is info security issue, second is data conflict, even if the user managed to save the unsynced data into local storage. 
 There's a chance he can log into a new device, and the unsynced local is lost
 -> Well, this is still mangeable, but with a conflict resolution
 
-# Decisions 
+# Decisions & Notes
 
 1. Save per changes in content or per delay debounce (1-2s)  
   - Per typing word: very expensive, a 60wpm -> 60 api calls or ws messages per second is crazy  
@@ -131,26 +83,16 @@ There's a chance he can log into a new device, and the unsynced local is lost
 2. What if the user types a large chunk of text then close the tab immediately (before the 1s save triggered)
  - React useEffect unmount -> save using synchrnous function on cleanup   (local storage) -> later send it to the server when user return
  - Make a save request to server (async) -> unreliable, may cancel it before complete  
+ -> use fetch keep alive
  - SendBeacon: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon -> network fails cause loss of data
 
+-> keepalive fetch
 
 3. API calls or websocket 
  - WS is less reliable, and i dont need realtime, if save doesnt catch up -> handles client cache well that it backup later
 
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
+4. optimistic timestamp: no collaborative editing -> acceptable 
+> see others sync decisions above
+5. DOMpurify mitigate xss 
+6. blob storage for templates: to leverage CDN 
 
